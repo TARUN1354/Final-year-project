@@ -1,0 +1,62 @@
+import numpy as np
+import random
+
+# Define environment
+states = ['dry', 'optimal', 'wet']
+actions = ['water', 'wait']
+
+# Initialize Q-table with zeros
+q_table = np.zeros((len(states), len(actions)))
+
+# Define learning parameters
+alpha = 0.1       # Learning rate
+gamma = 0.9       # Discount factor
+epsilon = 0.1     # Exploration rate
+episodes = 1000   # Number of episodes
+
+def get_reward(state, action):
+    if state == 'dry' and action == 'water':
+        return 10
+    elif state == 'optimal' and action == 'wait':
+        return 5
+    elif state == 'wet' and action == 'wait':
+        return 2
+    else:
+        return -10
+def get_next_state(state, action):
+    if action == 'water':
+        return 'wet'
+    elif state == 'wet':
+        return 'optimal'
+    elif state == 'optimal':
+        return 'dry'
+    else:
+        return 'dry'
+
+# Training loop
+for _ in range(episodes):
+    state = random.choice(states)
+    while True:
+        state_index = states.index(state)
+        
+        # Choose action using epsilon-greedy
+        if random.uniform(0, 1) < epsilon:
+            action = random.choice(actions)
+        else:
+            action = actions[np.argmax(q_table[state_index])]
+        action_index = actions.index(action)
+        reward = get_reward(state, action)
+        next_state = get_next_state(state, action)
+        next_state_index = states.index(next_state)
+        # Q-learning update rule
+        q_table[state_index, action_index] = q_table[state_index, action_index] + \
+            alpha * (reward + gamma * np.max(q_table[next_state_index]) - q_table[state_index, action_index])
+        
+        if state == 'wet' or state == 'dry':
+            break  # End the episode if extreme condition
+        state = next_state
+
+# Display the final Q-table
+print("Final Q-Table:")
+print(q_table)
+
